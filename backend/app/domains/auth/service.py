@@ -1,10 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
+from jose import JWTError
 from app.domains.users.repository import UserRepository
 from app.domains.wallet.service import WalletService
-from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+from app.core.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+)
 from app.domains.auth.schemas import RegisterRequest, LoginRequest, TokenResponse
-from jose import JWTError
+
 
 class AuthService:
     def __init__(self, db: AsyncSession):
@@ -20,8 +27,6 @@ class AuthService:
 
         hashed = hash_password(data.password)
         user = await self.user_repo.create(data.username, data.email, hashed)
-
-        # Every new user gets a wallet with starting balance
         await self.wallet_service.create_wallet(user.id)
 
         return TokenResponse(
